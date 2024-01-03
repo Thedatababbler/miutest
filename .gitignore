@@ -1,0 +1,12 @@
+DATA/
+BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext/
+OUTPUTS/
+newpy/
+show_wound/
+*.jpg
+*.png
+*.jpeg
+MODEL/
+buv/
+create/
+build/

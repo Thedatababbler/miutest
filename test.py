@@ -142,6 +142,7 @@ def main():
     # print("FLOPs: {}, #Parameter: {}".format(params, flops))
 
     checkpointer = DetectronCheckpointer(cfg, model, save_dir=cfg.OUTPUT_DIR)
+    # import pdb; pdb.set_trace()
     if args.weight:
         _ = checkpointer.load(args.weight, force=True)
     else:

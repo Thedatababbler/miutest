@@ -50,7 +50,7 @@ def inference_default(
     results_dict = {}
     cpu_device = torch.device("cpu")
     for i, batch in enumerate(tqdm(data_loader)):
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         ###########add paths return values########
         images, targets, image_ids, paths, *_ = batch
         with torch.no_grad():
@@ -431,21 +431,23 @@ def create_prompt_from_path_json(json_dict, labels, label_list, tokenizer, paths
         tokens_positive = []
         
         all_positive_maps = []
+        # import pdb;pdb.set_trace()
         for _index, label in enumerate(labels[0]): #class specific
-            if 'prefix' in json_dict[real_path]:
-                # import pdb; pdb.set_trace()
-                try:
-                    objects_query += json_dict[real_path].get('prefix')[_index]
-                except:
-                    objects_query += json_dict[real_path].get('prefix')
+            #### prefix and suffix comment out for gpt4 version
+            # if 'prefix' in json_dict[real_path]:
+            #     # import pdb; pdb.set_trace()
+            #     try:
+            #         objects_query += json_dict[real_path].get('prefix')[_index]
+            #     except:
+            #         objects_query += json_dict[real_path].get('prefix')
             start_i = len(objects_query)
-        
+            
             objects_query += json_dict[real_path].get('name')[_index]
             end_i = len(objects_query)
             tokens_positive.append([(start_i, end_i)])  # Every label has a [(start, end)]
 
-            if 'suffix' in json_dict[real_path]:
-                objects_query += json_dict[real_path].get('suffix')[_index]
+            # if 'suffix' in json_dict[real_path]:
+            #     objects_query += json_dict[real_path].get('suffix')[_index]
             if _index < len(labels[0])-1:
                 objects_query += '. '
         tokenized = tokenizer(caption, return_tensors="pt")
@@ -629,6 +631,9 @@ def inference(
         #####add vqa####
         #import pdb; pdb.set_trace()
         images, targets, image_ids, paths, *_ = batch
+        # import pdb; pdb.set_trace()
+        if None in paths:
+            continue
 
         all_output = []
         mdetr_style_output = []

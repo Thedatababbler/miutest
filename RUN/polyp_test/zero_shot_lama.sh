@@ -1,9 +1,9 @@
 #!/bin/bash
-config_file=configs/medical/glip_Swin_T_O365_GoldG_polyp_kvasir.yaml
-odinw_configs=configs/medical/glip_Swin_T_O365_GoldG_polyp_kvasir.yaml
-output_dir=OUTPUTS/polyp/hybrid/zero_shot/
+config_file=configs/glip_Swin_T_O365_GoldG_polyp_kvasir.yaml
+odinw_configs=configs/glip_Swin_T_O365_GoldG_polyp_kvasir.yaml
+output_dir=OUTPUTS/polyp/hybrid/zero_shot/kvasir/llm/top3
 model_checkpoint=MODEL/glip_tiny_model_o365_goldg.pth
-jsonFile=autoprompt_json/newtest/lama_kvasir_path_prompt_top1.json
+jsonFile=autoprompt_json/llm_kvasir_path_prompt_top3.json
 
 python test.py --json ${jsonFile} \
       --config-file ${config_file} --weight ${model_checkpoint} \

@@ -70,14 +70,14 @@
 		{"prefix": "", "name": "pink yellow red color oval bump", "suffix": " in rectum"},        ]'
         REGISTER:
             test:
-                ann_file: DATA/POLYP/annotations/Kvasir_val.json
-                img_dir:  DATA/POLYP/val/Kvasir/images
+                ann_file: DATA/POLYP/annotations/Kvasir_test.json
+                img_dir:  DATA/POLYP/test/Kvasir/images
             train:
                 ann_file: DATA/POLYP/annotations/Kvasir_train.json
                 img_dir: DATA/POLYP/train/images
             val:
-                ann_file: DATA/POLYP/annotations/Kvasir_val.json
-                img_dir:  DATA/POLYP/val/Kvasir/images 
+                ann_file: DATA/POLYP/annotations/Kvasir_test.json
+                img_dir:  DATA/POLYP/test/Kvasir/images 
 
         TEST: ("val",)
         TRAIN: ("train", )

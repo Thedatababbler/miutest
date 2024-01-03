@@ -803,7 +803,7 @@ def convert_grounding_to_od_logits(logits, box_cls, positive_map, score_agg=None
     if positive_map is not None:
         # score aggregation method
         if score_agg == "MEAN":
-            #import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             for b_index in range(scores.shape[0]):
                 for label_j in positive_map[0]:
                     #对所有bbox，label j 的score = dot product logits 对应类的prompt平均

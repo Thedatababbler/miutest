@@ -1,0 +1,11 @@
+python make_autoprompts_gpt4v.py --dataset 'mri_t2' \
+      --cls_names 'left kidney in MRI images T2 modality' \
+      --cls_names 'liver in  MRI images T2 modality' \
+      --cls_names 'spleen in MRI images T2 modality' \
+      --cls_names 'right kidney in MRI images T2 modality'\
+      --vqa_names 'tuberculosis'\
+      --mode 'llm'\
+      --real_cls_names 'left kidney'\
+      --real_cls_names 'liver'\
+      --real_cls_names 'spleen'\
+      --real_cls_names 'right kidney'

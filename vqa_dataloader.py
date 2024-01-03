@@ -78,16 +78,20 @@ class CocoDetection(data.Dataset):
         path = meta['file_name']
         img = pil_loader(os.path.join(self.root, path))
 
-        if self.transform is not None:
-            img = self.transform(img)
+        if img:
+        
+            if self.transform is not None:
+                img = self.transform(img)
 
-        if self.target_transform is not None:
-            target = self.target_transform(target)
+            if self.target_transform is not None:
+                target = self.target_transform(target)
 
-        if return_meta:
-            return img, target, meta
+            if return_meta:
+                return img, target, meta
+            else:
+                return img, target, os.path.join(self.root, path)
         else:
-            return img, target, os.path.join(self.root, path)
+            return None, None, path
 
     def __len__(self):
         return len(self.ids)
@@ -113,6 +117,7 @@ class VqaCollator(object):
         self.size_divisible = size_divisible
 
     def __call__(self, batch):
+        
         transposed_batch = list(zip(*batch))
         
         images = transposed_batch[0]#to_image_list(transposed_batch[0], self.size_divisible)
@@ -120,6 +125,8 @@ class VqaCollator(object):
         ######add vqa######
         paths = transposed_batch[2]
         ##############
+        if not images:
+            print(transposed_batch)
         return images, targets, paths
 
 def make_dataloader(root, annFile, transforms, **args):

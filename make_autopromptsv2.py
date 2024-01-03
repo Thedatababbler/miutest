@@ -4,9 +4,9 @@ import os
 from vqa_dataloader import make_dataloader
 from PIL import Image
 from torchvision import transforms
-from transformers import OFATokenizer, OFAModel
+# from transformers import OFATokenizer, OFAModel
 from transformers import AutoTokenizer, AutoModelForMaskedLM
-from OFA.transformers.src.transformers.models.ofa.generate import sequence_generator
+# from OFA.transformers.src.transformers.models.ofa.generate import sequence_generator
 from collections import defaultdict
 from tqdm import tqdm
 import json
@@ -25,7 +25,7 @@ parser.add_argument('--vqa_names', action='append', required=True)
 args = parser.parse_args()
 
 bert_map = {
-    'pubmed': "./BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext",
+    'pubmed': "./BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext",
     'bert': None,
 }
 bert_path = bert_map[args.bert_type]
@@ -40,11 +40,12 @@ DATASETMAP = {
     'isbi': {'data_path':'DATA/ISBI2016/images/test', 'anno_path':'DATA/ISBI2016/annotations/test.json'},
     'cvc300': {'data_path':'DATA/POLYP/val/CVC-300/images', 'anno_path':'DATA/POLYP/annotations/CVC-300_val.json'},
     'colondb': {'data_path':'DATA/POLYP/val/CVC-ColonDB/images', 'anno_path':'DATA/POLYP/annotations/CVC-ColonDB_val.json'},
-    'clinicdb': {'data_path':'DATA/POLYP/val/CVC-ClinicDB/images', 'anno_path':'DATA/POLYP/annotations/CVC-ClinicDB_val.json'},
-    'kvasir': {'data_path':'DATA/POLYP/val/Kvasir/images', 'anno_path':'DATA/POLYP/annotations/Kvasir_val.json'},
+    'clinicdb': {'data_path':'DATA/POLYP/test/CVC-ClinicDB/images', 'anno_path':'DATA/POLYP/annotations/CVC-ClinicDB_test.json'},
+    'kvasir': {'data_path':'DATA/POLYP/test/Kvasir/images', 'anno_path':'DATA/POLYP/annotations/Kvasir_test.json'},
     'warwick': {'data_path': 'DATA/WarwickQU/images/test', 'anno_path': 'DATA/WarwickQU/annotations/test.json'},
     'bccd': {'data_path': 'DATA/BCCD/test', 'anno_path': 'DATA/BCCD/annotations/test.json'},
-    'cpm17': {'data_path': 'DATA/Histopathy/cpm17/images/test', 'anno_path': 'DATA/Histopathy/cpm17/annotations/test.json'}
+    'cpm17': {'data_path': 'DATA/Histopathy/cpm17/images/test', 'anno_path': 'DATA/Histopathy/cpm17/annotations/test.json'},
+    'tn3k': {'data_path':'DATA/TN3k/images/test', 'anno_path':'DATA/TN3k/annotations/test.json'},
 }
 
 resolution = 384
@@ -61,18 +62,18 @@ def build_model(bert_path, ofa_path,mode='hybrid'):
     if mode == hybrid, will generate lama and vqa hybrid prompt
     if mode == all, will generate lama prompt for whole data set
     '''
-    if mode == 'hybrid' or mode == 'location':
-        tokenizer_lama = AutoTokenizer.from_pretrained(bert_path)
-        model_lama = AutoModelForMaskedLM.from_pretrained(bert_path).to('cuda')
-        model_lama.eval()
+    # if mode == 'hybrid' or mode == 'location':
+    #     tokenizer_lama = AutoTokenizer.from_pretrained(bert_path)
+    #     model_lama = AutoModelForMaskedLM.from_pretrained(bert_path).to('cuda')
+    #     model_lama.eval()
 
-        tokenizer_vqa = OFATokenizer.from_pretrained(ofa_path, use_cache=True)
-        model_vqa = OFAModel.from_pretrained(ofa_path, use_cache=False)
-        model_vqa.eval()
+    #     tokenizer_vqa = OFATokenizer.from_pretrained(ofa_path, use_cache=True)
+    #     model_vqa = OFAModel.from_pretrained(ofa_path, use_cache=False)
+    #     model_vqa.eval()
 
-        return model_lama,tokenizer_lama, model_vqa, tokenizer_vqa
+    #     return model_lama,tokenizer_lama, model_vqa, tokenizer_vqa
 
-    elif mode == 'lama':
+    if mode == 'lama':
         tokenizer_lama = AutoTokenizer.from_pretrained(bert_path)
         model_lama = AutoModelForMaskedLM.from_pretrained(bert_path).to('cuda')
         model_lama.eval()
@@ -108,9 +109,12 @@ def masked_prompt(cls_names, model, tokenizer, mode='hybrid', topk=3):
             # 'location': f'[CLS] The {cls_name} normally appears at or near the [MASK] of a cell. [SEP]',
             # 'color': f'[CLS] When a cell is histologically stained, the {cls_name} are in [MASK] color. [SEP]',
             # 'shape': f'[CLS] Mostly the shape of {cls_name} is [MASK]. [SEP]',
-            'location': f'[CLS] The location of {cls_name} is at [MASK]. [SEP]',
-            'color': f'[CLS] The typical color of {cls_name} is [MASK]. [SEP]',
-            'shape': f'[CLS] The typical shape of {cls_name} is [MASK]. [SEP]',
+            # 'location': f'[CLS] The location of {cls_name} is at [MASK]. [SEP]',
+            # 'color': f'[CLS] The typical color of {cls_name} is [MASK]. [SEP]',
+            # 'shape': f'[CLS] The typical shape of {cls_name} is [MASK]. [SEP]',
+            'location': f'Polyps are typically pale pink to red in color, mirroring the hues of their mucosal origins. They commonly exhibit sessile, flat shapes and locate on [MASK].',
+            'color': f'Polyps are typically [MASK] in color, mirroring the hues of their mucosal origins. They commonly exhibit sessile, flat shapes and locate on colon.',
+            'shape': f'Polyps are typically pink in color, mirroring the hues of their mucosal origins. They commonly exhibit [MASK] shape and locate on colon.',
             #'def': f'{cls_name} is a  . [SEP]',
         }
 
@@ -122,28 +126,43 @@ def masked_prompt(cls_names, model, tokenizer, mode='hybrid', topk=3):
         for k, v in questions_dict.items():
             # import pdb; pdb.set_trace()
             predicted_tokens = []
-            input_ids_translated = tokenizer(
-                v,
-                return_tensors = 'pt'
-                ).input_ids.to('cuda')
-            tokenized_text = tokenizer.tokenize(v)
-            indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
-            # Create the segments tensors.
-            segments_ids = [0] * len(tokenized_text)
+            # input_ids_translated = tokenizer(
+            #     v,
+            #     return_tensors = 'pt'
+            #     ).input_ids.to('cuda')
+            # tokenized_text = tokenizer.tokenize(v)
+            # indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
+            # # Create the segments tensors.
+            # segments_ids = [0] * len(tokenized_text)
             
-            # Convert inputs to PyTorch tensors
-            tokens_tensor = torch.tensor([indexed_tokens]).to('cuda')
-            segments_tensors = torch.tensor([segments_ids]).to('cuda')
+            # # Convert inputs to PyTorch tensors
+            # tokens_tensor = torch.tensor([indexed_tokens]).to('cuda')
+            # segments_tensors = torch.tensor([segments_ids]).to('cuda')
 
-            masked_index = tokenized_text.index('[MASK]')
+            # masked_index = tokenized_text.index('[MASK]')
+            # with torch.no_grad():
+            #     predictions = model(tokens_tensor, segments_tensors)
+
+            inputs = tokenizer(v, return_tensors='pt').to('cuda')
+
+            # Predict all tokens
             with torch.no_grad():
-                predictions = model(tokens_tensor, segments_tensors)
+                outputs = model(**inputs)
+                predictions = outputs[0]
             
-            _, predicted_index = torch.topk(predictions[0][0][masked_index], topk)#.item()
-            predicted_index = predicted_index.detach().cpu().numpy()
+            masked_index = torch.where(inputs['input_ids'][0] == tokenizer.mask_token_id)[0].item()
+            # _, predicted_index = torch.topk(predictions[0][0][masked_index], topk)#.item()
+            masked_logits = predictions[0, masked_index]
+            top_k_indices = torch.topk(masked_logits, topk).indices.tolist()
+            # predicted_index = predicted_index.detach().cpu().numpy()
+            predicted_words = tokenizer.convert_ids_to_tokens(top_k_indices)
             #print(predicted_index)
-            for idx in predicted_index:
-                predicted_tokens.append(tokenizer.convert_ids_to_tokens([idx])[0])
+            # import pdb; pdb.set_trace()
+            for idx in predicted_words:
+                # predicted_tokens.append(tokenizer.convert_ids_to_tokens([idx])[0])
+                predicted_tokens.append(idx)
+                # predicted_token = tokenizer.decode(predicted_index[idx])
+                
             #print(predicted_tokens)
             temp_str = v.strip().split(' ')
             for i in range(topk):
